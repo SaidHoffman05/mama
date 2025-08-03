@@ -1,0 +1,216 @@
+<!DOCTYPE html>
+<html lang="ru">
+<head>
+  <meta charset="UTF-8" />
+  <title>Мама, я тебя люблю💫</title>
+  <meta name="viewport" content="width=device-width, initial-scale=1.0"/>
+  <style>
+    html, body {
+      margin: 0;
+      padding: 0;
+      overflow: hidden;
+      font-family: Arial, sans-serif;
+      background: linear-gradient(to bottom, #0d0d2b, #3b0066);
+      color: white;
+      height: 100%;
+      width: 100%;
+    }
+    .start-screen {
+      position: fixed;
+      top: 0; left: 0;
+      height: 100%;
+      width: 100%;
+      background: linear-gradient(to bottom, #0d0d2b, #3b0066);
+      display: flex;
+      flex-direction: column;
+      justify-content: center;
+      align-items: center;
+      z-index: 10;
+    }
+    .start-screen h1 {
+      font-size: 2em;
+      margin-bottom: 20px;
+    }
+    .start-screen button {
+      padding: 12px 24px;
+      font-size: 18px;
+      background: #e91e63;
+      color: white;
+      border: none;
+      border-radius: 12px;
+      cursor: pointer;
+    }
+    #loveText {
+      position: fixed;
+      top: 60%;
+      left: 50%;
+      transform: translate(-50%, -50%);
+      color: white;
+      font-size: 32px;
+      font-weight: bold;
+      opacity: 0;
+      z-index: 5;
+      text-shadow: 0 0 10px #ff69b4;
+      transition: top 1.5s ease-out, opacity 1.2s ease-in;
+    }
+    canvas {
+      display: block;
+    }
+  </style>
+</head>
+<body>
+  <div class="start-screen" id="start-screen">
+    <h1>Чтобы продолжить, нажмите кнопку ниже</h1>
+    <button onclick="startExperience()">▶ Начать</button>
+  </div>
+
+  <div id="loveText">Мама, я тебя люблю 💖</div>
+  <canvas id="canvas"></canvas>
+  <audio id="bgm" loop>
+    <source src="music.mp3" type="audio/mp3">
+  </audio>
+
+  <script>
+    const canvas = document.getElementById("canvas");
+    const ctx = canvas.getContext("2d");
+    canvas.width = window.innerWidth;
+    canvas.height = window.innerHeight;
+
+    const loveText = document.getElementById("loveText");
+
+    let rocketY = canvas.height;
+    let particles = [], effects = [];
+    let exploded = false;
+
+    function startExperience() {
+      document.getElementById("start-screen").style.display = "none";
+      document.getElementById("bgm")?.play();
+      effects = createEffects(80);
+      animate();
+    }
+
+    function drawRocket() {
+      ctx.beginPath();
+      ctx.arc(canvas.width / 2, rocketY, 6, 0, 2 * Math.PI);
+      ctx.fillStyle = "#ffffff";
+      ctx.fill();
+    }
+
+    function createHeartExplosion(cx, cy) {
+      const list = [];
+      for (let i = 0; i < 150; i++) {
+        const t = (i / 150) * 2 * Math.PI;
+        const x = 16 * Math.pow(Math.sin(t), 3);
+        const y = 13 * Math.cos(t) - 5 * Math.cos(2*t) - 2 * Math.cos(3*t) - Math.cos(4*t);
+        const angle = Math.atan2(-y, x);
+        const speed = Math.random() * 2 + 1;
+        list.push({
+          x: cx, y: cy,
+          vx: Math.cos(angle) * speed,
+          vy: Math.sin(angle) * speed,
+          color: "#FF0000",
+          life: 100,
+          decay: 1
+        });
+      }
+      return list;
+    }
+
+    function drawParticle(p) {
+      ctx.beginPath();
+      ctx.arc(p.x, p.y, 3, 0, 2 * Math.PI);
+      ctx.fillStyle = p.color;
+      ctx.fill();
+    }
+
+    function createEffects(n) {
+      const items = [];
+      const textOptions = ["Мама💗", "💞"];
+      const colors = ["#ff3366", "#ff69b4", "#ffffff", "#ffd700"];
+      for (let i = 0; i < n; i++) {
+        items.push({
+          x: Math.random() * canvas.width,
+          y: Math.random() * -canvas.height,
+          type: Math.random() < 0.3 ? "emoji" : (Math.random() < 0.5 ? "line" : "heart"),
+          char: textOptions[Math.floor(Math.random() * textOptions.length)],
+          color: colors[Math.floor(Math.random() * colors.length)],
+          speed: Math.random() * 2 + 1
+        });
+      }
+      return items;
+    }
+
+    function drawEffect(e) {
+      ctx.save();
+      ctx.fillStyle = e.color;
+      ctx.strokeStyle = e.color;
+      if (e.type === "emoji") {
+        ctx.font = "20px Arial";
+        ctx.fillText(e.char, e.x, e.y);
+      } else if (e.type === "line") {
+        ctx.beginPath();
+        ctx.moveTo(e.x, e.y);
+        ctx.lineTo(e.x, e.y + 10);
+        ctx.stroke();
+      } else {
+        drawHeart(e.x, e.y, 6, e.color);
+      }
+      ctx.restore();
+    }
+
+    function drawHeart(x, y, size, color) {
+      ctx.save();
+      ctx.beginPath();
+      ctx.translate(x, y);
+      ctx.moveTo(0, -size / 2);
+      ctx.bezierCurveTo(-size, -size, -size, size / 1.5, 0, size);
+      ctx.bezierCurveTo(size, size / 1.5, size, -size, 0, -size / 2);
+      ctx.closePath();
+      ctx.fillStyle = color;
+      ctx.fill();
+      ctx.restore();
+    }
+
+    function animate() {
+      const bg = ctx.createLinearGradient(0, 0, 0, canvas.height);
+      bg.addColorStop(0, "#0d0d2b");
+      bg.addColorStop(1, "#3b0066");
+      ctx.fillStyle = bg;
+      ctx.fillRect(0, 0, canvas.width, canvas.height);
+
+      effects.forEach(e => {
+        e.y += e.speed;
+        if (e.y > canvas.height) {
+          e.y = Math.random() * -100;
+          e.x = Math.random() * canvas.width;
+        }
+        drawEffect(e);
+      });
+
+      if (!exploded) {
+        drawRocket();
+        rocketY -= 4;
+        if (rocketY <= canvas.height / 2) {
+          exploded = true;
+          particles = createHeartExplosion(canvas.width / 2, rocketY);
+          setTimeout(() => {
+            loveText.style.opacity = 1;
+            loveText.style.top = "50%";
+          }, 600);
+        }
+      } else {
+        particles = particles.map(p => {
+          p.x += p.vx;
+          p.y += p.vy;
+          p.vy += 0.02;
+          p.life -= p.decay;
+          drawParticle(p);
+          return p;
+        }).filter(p => p.life > 0);
+      }
+
+      requestAnimationFrame(animate);
+    }
+  </script>
+</body>
+</html>
